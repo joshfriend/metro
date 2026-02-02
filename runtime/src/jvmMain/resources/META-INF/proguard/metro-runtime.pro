@@ -7,6 +7,7 @@
     @dev.zacsweers.metro.internal.ComptimeOnly <methods>;
 }
 
-# Remove classes annotated with @ComptimeOnly
-# These are compile-time-only classes (like BindsMirror) that are not needed at runtime
+# Remove classes annotated with @ComptimeOnly (if any exist)
+# BindsMirror classes are stripped during IR compilation and won't reach bytecode,
+# but this rule is kept for completeness and backward compatibility.
 -assumenosideeffects @dev.zacsweers.metro.internal.ComptimeOnly class *

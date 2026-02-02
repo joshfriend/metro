@@ -9,6 +9,7 @@ package dev.zacsweers.metro.internal
  * R8 rules are bundled with the Metro runtime to remove annotated elements via
  * `-assumenosideeffects`.
  */
+@Deprecated("Internal Metro annotation", level = DeprecationLevel.HIDDEN)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 public annotation class ComptimeOnly

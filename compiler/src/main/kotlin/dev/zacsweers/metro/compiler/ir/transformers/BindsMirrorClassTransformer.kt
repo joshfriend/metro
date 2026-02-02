@@ -84,18 +84,13 @@ private fun transformBindingMirrorClass(parentClass: IrClass, mirrorClass: IrCla
   val isExternal = mirrorClass.isExternalParent
   val collector = BindsMirrorCollector(isInterop = false)
 
-  // On JVM, annotate with @ComptimeOnly so R8 can remove these
+  // On JVM, annotate stub method bodies with @ComptimeOnly so R8 can remove them
   val comptimeOnlyConstructor =
     if (!isExternal && context.pluginContext.platform.isJvm()) {
       context.metroSymbols.comptimeOnlyAnnotationConstructor
     } else {
       null
     }
-
-  // Annotate the mirror class with @ComptimeOnly
-  comptimeOnlyConstructor?.let { ctor ->
-    mirrorClass.annotations += buildAnnotation(mirrorClass.symbol, ctor)
-  }
 
   fun processFunction(declaration: IrSimpleFunction) {
     if (!declaration.isFakeOverride) {

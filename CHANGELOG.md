@@ -12,6 +12,7 @@ Changelog
 
 - **[IR]**: Use `androidx.collection` primitive and scatter collections in a few more places to further help improve memory performance.
 - **[IR]**: Don't attempt to generate a graph impl if validation at any level in processing fails, as this could result in obscure extra errors getting reported after the relevant initial error.
+- **[IR]**: Strip synthetic `BindsMirror` nested classes from IR before code generation. These classes were only needed for FIR incremental compilation tracking and are now removed before reaching bytecode, eliminating the need for `@ComptimeOnly` annotations and R8/ProGuard rules for cleanup.
 
 ### Fixes
 

@@ -16,7 +16,9 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.incremental.components.ExpectActualTracker
 import org.jetbrains.kotlin.incremental.components.LookupTracker
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 
 public class MetroIrGenerationExtension(
   private val messageCollector: MessageCollector,
@@ -68,11 +70,38 @@ public class MetroIrGenerationExtension(
               )
             moduleFragment.transform(dependencyGraphTransformer, null)
           }
+
+          // Strip synthetic BindsMirror classes - they were only needed for FIR
+          // incremental compilation tracking and serve no purpose in the final bytecode.
+          trace("Strip mirror classes") { stripMirrorClasses(moduleFragment) }
         }
       }
     } catch (_: ExitProcessingException) {
       // Reported internally
       return
+    }
+  }
+
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  private fun IrMetroContext.stripMirrorClasses(moduleFragment: IrModuleFragment) {
+    moduleFragment.files
+      .flatMap { file -> file.declarations }
+      .filterIsInstance<IrClass>()
+      .forEach { declaration -> stripMirrorClassesFromClass(declaration) }
+  }
+
+  @OptIn(UnsafeDuringIrConstructionAPI::class)
+  private fun IrMetroContext.stripMirrorClassesFromClass(irClass: IrClass) {
+    val mirrorsToRemove = irClass.declarations
+      .filterIsInstance<IrClass>()
+      .filter { it.name == Symbols.Names.BindsMirrorClass }
+    for (mirror in mirrorsToRemove) {
+      irClass.declarations.remove(mirror)
+    }
+
+    // Recurse into nested classes
+    for (nested in irClass.declarations.filterIsInstance<IrClass>()) {
+      stripMirrorClassesFromClass(nested)
     }
   }
 }
